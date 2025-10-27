@@ -1,6 +1,7 @@
 import express, { json } from "express";
 import cors from "cors";
-import { createConnection } from "mysql2"; 
+import pkg from 'pg';
+const { Pool } = pkg;
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
@@ -94,29 +95,38 @@ app.use('/uploads', express.static(uploadsDir, {
     etag: true
 }));
 
-// Database connection - Updated for Render
-const db = createConnection({
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",   
-    password: process.env.DB_PASSWORD || "CHIBOYSOLOMONadiele11@",  
-    database: process.env.DB_NAME || "bucohub",
-    port: process.env.DB_PORT || 3306,
-    ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : false
+// PostgreSQL Database connection for Render
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-db.connect(err => {
+// Test database connection
+pool.connect((err, client, release) => {
     if (err) {
         console.error("Database connection failed:", err.message);
         console.error("Database config:", {
-            host: process.env.DB_HOST || "localhost",
-            user: process.env.DB_USER || "root",
-            database: process.env.DB_NAME || "bucohub",
-            port: process.env.DB_PORT || 3306
+            connection: process.env.DATABASE_URL ? "Set (hidden)" : "Missing"
         });
-        process.exit(1);
+        // Don't exit - let the server start for testing
+    } else {
+        console.log("Connected to PostgreSQL database");
+        release();
     }
-    console.log("Connected to MySQL database (bucohub)");
 });
+
+// Database helper function to maintain similar interface
+const db = {
+    query: (sql, params, callback) => {
+        if (callback) {
+            pool.query(sql, params, (err, result) => {
+                callback(err, result);
+            });
+        } else {
+            return pool.query(sql, params);
+        }
+    }
+};
 
 // =============================
 // UTILITY FUNCTIONS
@@ -186,12 +196,8 @@ const FileUtils = {
     cleanupOrphanedFiles: async () => {
         try {
             const files = fs.readdirSync(uploadsDir);
-            const dbFiles = await new Promise((resolve, reject) => {
-                db.query('SELECT profilePictureUrl FROM registrations WHERE profilePictureUrl IS NOT NULL', (err, results) => {
-                    if (err) reject(err);
-                    else resolve(results.map(row => row.profilePictureUrl.replace('/uploads/', '')));
-                });
-            });
+            const result = await db.query('SELECT "profilePictureUrl" FROM registrations WHERE "profilePictureUrl" IS NOT NULL');
+            const dbFiles = result.rows.map(row => row.profilePictureUrl.replace('/uploads/', ''));
             
             const orphanedFiles = files.filter(file => 
                 file !== '.gitkeep' && !dbFiles.includes(file)
@@ -356,9 +362,10 @@ app.post("/api/register", upload.single('profilePicture'), async (req, res) => {
         
         const sql = `
             INSERT INTO registrations 
-            (firstName, lastName, email, phone, password,
-            age, education, experience, courses, motivation, profilePictureUrl, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ("firstName", "lastName", email, phone, password,
+            age, education, experience, courses, motivation, "profilePictureUrl", created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+            RETURNING id
         `;
 
         db.query(
@@ -367,25 +374,25 @@ app.post("/api/register", upload.single('profilePicture'), async (req, res) => {
             age, education, experience, JSON.stringify(coursesToStore), motivation, profilePictureUrl],
             async (err, result) => {
                 if (err) {
-                    console.error("SQL Error:", err.sqlMessage);
+                    console.error("SQL Error:", err.message);
                     
                     // Clean up uploaded file if database operation fails
                     if (req.file) {
                         await FileUtils.deleteFile(req.file.path);
                     }
                     
-                    if (err.code === "ER_DUP_ENTRY") {
+                    if (err.code === "23505") { // PostgreSQL unique violation
                         return res.status(409).json({ error: "Email already registered" });
                     }
-                    return res.status(500).json({ error: err.sqlMessage });
+                    return res.status(500).json({ error: err.message });
                 }
 
-                console.log('Registration successful, ID:', result.insertId);
+                console.log('Registration successful, ID:', result.rows[0].id);
                 console.log('Profile picture stored at:', profilePictureUrl);
 
                 res.json({
                     message: "Registration successful",
-                    studentId: result.insertId,
+                    studentId: result.rows[0].id,
                     data: {
                         firstName,
                         lastName,
@@ -408,7 +415,7 @@ app.post("/api/register", upload.single('profilePicture'), async (req, res) => {
     }
 });
 
-// STUDENT LOGIN ENDPOINT - MOVED OUTSIDE REGISTRATION ROUTE
+// STUDENT LOGIN ENDPOINT
 app.post("/api/students/login", async (req, res) => {
     const { email, password } = req.body;
     
@@ -419,7 +426,7 @@ app.post("/api/students/login", async (req, res) => {
         });
     }
 
-    const sql = "SELECT * FROM registrations WHERE email = ?";
+    const sql = "SELECT * FROM registrations WHERE email = $1";
     
     db.query(sql, [email], async (err, result) => {
         if (err) {
@@ -429,14 +436,14 @@ app.post("/api/students/login", async (req, res) => {
             });
         } 
         
-        if (result.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(401).json({ 
                 success: false,
                 error: "Invalid email or password" 
             });
         }
         
-        const student = result[0];
+        const student = result.rows[0];
         
         try {
             const isPasswordValid = await bcrypt.compare(password, student.password);
@@ -477,8 +484,8 @@ app.get("/api/students", authenticateAdmin, (req, res) => {
     const offset = (page - 1) * limit;
     
     let sql = `
-        SELECT id, firstName, lastName, email, phone, age, education, experience, 
-            courses, motivation, profilePictureUrl, created_at, updated_at
+        SELECT id, "firstName", "lastName", email, phone, age, education, experience, 
+            courses, motivation, "profilePictureUrl", created_at, updated_at
         FROM registrations 
         WHERE 1=1
     `;
@@ -489,18 +496,18 @@ app.get("/api/students", authenticateAdmin, (req, res) => {
     // Add search filter
     if (search) {
         const searchTerm = `%${search}%`;
-        sql += ` AND (firstName LIKE ? OR lastName LIKE ? OR email LIKE ?)`;
-        countSql += ` AND (firstName LIKE ? OR lastName LIKE ? OR email LIKE ?)`;
+        sql += ` AND ("firstName" LIKE $${params.length + 1} OR "lastName" LIKE $${params.length + 2} OR email LIKE $${params.length + 3})`;
+        countSql += ` AND ("firstName" LIKE $1 OR "lastName" LIKE $2 OR email LIKE $3)`;
         params.push(searchTerm, searchTerm, searchTerm);
         countParams.push(searchTerm, searchTerm, searchTerm);
     }
     
     // Add sorting
     const allowedSortFields = ['id', 'firstName', 'lastName', 'email', 'age', 'created_at'];
-    const sortField = allowedSortFields.includes(sort) ? sort : 'id';
+    const sortField = allowedSortFields.includes(sort) ? (sort === 'firstName' || sort === 'lastName' ? `"${sort}"` : sort) : 'id';
     const sortOrder = order.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
     
-    sql += ` ORDER BY ${sortField} ${sortOrder} LIMIT ? OFFSET ?`;
+    sql += ` ORDER BY ${sortField} ${sortOrder} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(parseInt(limit), offset);
     
     console.log('Fetching students with query:', { page, limit, search, sort, order, offset });
@@ -512,7 +519,7 @@ app.get("/api/students", authenticateAdmin, (req, res) => {
             return res.status(500).json({ error: "Database error" });
         }
         
-        const total = countResult[0].total;
+        const total = parseInt(countResult.rows[0].total);
         const totalPages = Math.ceil(total / limit);
         
         // Get student data
@@ -522,10 +529,10 @@ app.get("/api/students", authenticateAdmin, (req, res) => {
                 return res.status(500).json({ error: "Database error" });
             }
             
-            console.log(`Found ${result.length} students out of ${total} total`);
+            console.log(`Found ${result.rows.length} students out of ${total} total`);
             
             res.json({
-                students: result,
+                students: result.rows,
                 total,
                 totalPages,
                 currentPage: parseInt(page),
@@ -540,10 +547,10 @@ app.get("/api/students/:id", authenticateAdmin, (req, res) => {
     const { id } = req.params;
     
     const sql = `
-        SELECT id, firstName, lastName, email, phone, age, education, experience, 
-            courses, motivation, profilePictureUrl, created_at, updated_at
+        SELECT id, "firstName", "lastName", email, phone, age, education, experience, 
+            courses, motivation, "profilePictureUrl", created_at, updated_at
         FROM registrations 
-        WHERE id = ?
+        WHERE id = $1
     `;
     
     db.query(sql, [id], (err, result) => {
@@ -552,18 +559,18 @@ app.get("/api/students/:id", authenticateAdmin, (req, res) => {
             return res.status(500).json({ error: "Database error" });
         }
         
-        if (result.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: "Student not found" });
         }
         
-        res.json(result[0]);
+        res.json(result.rows[0]);
     });
 });
 
 // Export students to CSV
 app.get("/api/students/export/csv", authenticateAdmin, (req, res) => {
     const sql = `
-        SELECT id, firstName, lastName, email, phone, age, education, experience, 
+        SELECT id, "firstName", "lastName", email, phone, age, education, experience, 
             courses, motivation, created_at
         FROM registrations 
         ORDER BY created_at DESC
@@ -577,7 +584,7 @@ app.get("/api/students/export/csv", authenticateAdmin, (req, res) => {
         
         // Simple CSV generation
         const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Age', 'Education', 'Experience', 'Courses', 'Motivation', 'Registration Date'];
-        const csvData = result.map(student => [
+        const csvData = result.rows.map(student => [
             student.id,
             `"${student.firstName}"`,
             `"${student.lastName}"`,
@@ -604,7 +611,7 @@ app.get("/api/students/export/csv", authenticateAdmin, (req, res) => {
 // Export students to PDF
 app.get("/api/students/export/pdf", authenticateAdmin, (req, res) => {
     const sql = `
-        SELECT id, firstName, lastName, email, phone, age, education, experience, 
+        SELECT id, "firstName", "lastName", email, phone, age, education, experience, 
             courses, motivation, created_at
         FROM registrations 
         ORDER BY created_at DESC
@@ -630,7 +637,7 @@ app.get("/api/students/export/pdf", authenticateAdmin, (req, res) => {
             doc.fontSize(20).text('BUCODel Students Report', { align: 'center' });
             doc.moveDown();
             doc.fontSize(12).text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
-            doc.text(`Total Students: ${result.length}`, { align: 'center' });
+            doc.text(`Total Students: ${result.rows.length}`, { align: 'center' });
             doc.moveDown();
             
             // Add table headers
@@ -645,7 +652,7 @@ app.get("/api/students/export/pdf", authenticateAdmin, (req, res) => {
             yPosition += 25;
             
             // Add student data
-            result.forEach((student, index) => {
+            result.rows.forEach((student, index) => {
                 if (yPosition > 700) { // New page if needed
                     doc.addPage();
                     yPosition = 50;
@@ -687,14 +694,14 @@ app.put("/api/students/:id", authenticateAdmin, upload.single('profilePicture'),
         let oldProfilePicture = null;
         
         // Get current student data to handle file cleanup
-        db.query("SELECT profilePictureUrl FROM registrations WHERE id = ?", [id], async (err, result) => {
+        db.query('SELECT "profilePictureUrl" FROM registrations WHERE id = $1', [id], async (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
             
-            if (result.length === 0) {
+            if (result.rows.length === 0) {
                 return res.status(404).json({ error: "Student not found" });
             }
             
-            oldProfilePicture = result[0].profilePictureUrl;
+            oldProfilePicture = result.rows[0].profilePictureUrl;
             
             // Handle new file upload
             if (req.file) {
@@ -719,7 +726,16 @@ app.put("/api/students/:id", authenticateAdmin, upload.single('profilePicture'),
             
             updates.updated_at = new Date();
             
-            db.query("UPDATE registrations SET ? WHERE id = ?", [updates, id], 
+            // Build dynamic update query for PostgreSQL
+            const setClause = Object.keys(updates)
+                .map((key, index) => `"${key}" = $${index + 1}`)
+                .join(', ');
+            const values = Object.values(updates);
+            values.push(id);
+            
+            const updateSql = `UPDATE registrations SET ${setClause} WHERE id = $${values.length}`;
+            
+            db.query(updateSql, values, 
                 async (updateErr, updateResult) => {
                     if (updateErr) {
                         // Clean up new file if update fails
@@ -752,14 +768,14 @@ app.delete("/api/students/:id", authenticateAdmin, async (req, res) => {
     
     try {
         // Get student data first
-        db.query("SELECT profilePictureUrl FROM registrations WHERE id = ?", [id], async (err, result) => {
+        db.query('SELECT "profilePictureUrl" FROM registrations WHERE id = $1', [id], async (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
             
-            if (result.length === 0) {
+            if (result.rows.length === 0) {
                 return res.status(404).json({ error: "Student not found" });
             }
             
-            const profilePictureUrl = result[0].profilePictureUrl;
+            const profilePictureUrl = result.rows[0].profilePictureUrl;
             
             // Delete profile picture file if exists
             if (profilePictureUrl) {
@@ -767,7 +783,7 @@ app.delete("/api/students/:id", authenticateAdmin, async (req, res) => {
             }
             
             // Delete student record
-            db.query("DELETE FROM registrations WHERE id = ?", [id],
+            db.query("DELETE FROM registrations WHERE id = $1", [id],
                 (deleteErr, deleteResult) => {
                     if (deleteErr) return res.status(500).json({ error: deleteErr.message });
                     res.json({ message: "Student deleted successfully" });
@@ -843,7 +859,8 @@ app.post("/api/admins/register", async (req, res) => {
         const sql = `
             INSERT INTO admins 
             (first_name, last_name, email, password, role, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+            RETURNING id
         `;
 
         db.query(
@@ -851,9 +868,9 @@ app.post("/api/admins/register", async (req, res) => {
             [first_name, last_name, email, hashedPassword, role],
             (err, result) => {
                 if (err) {
-                    console.error("SQL Error:", err.sqlMessage);
+                    console.error("SQL Error:", err.message);
                     
-                    if (err.code === "ER_DUP_ENTRY") {
+                    if (err.code === "23505") { // PostgreSQL unique violation
                         return res.status(409).json({ 
                             success: false,
                             error: "Email already registered" 
@@ -861,16 +878,16 @@ app.post("/api/admins/register", async (req, res) => {
                     }
                     return res.status(500).json({ 
                         success: false,
-                        error: err.sqlMessage 
+                        error: err.message 
                     });
                 }
 
-                console.log('Admin registration successful, ID:', result.insertId);
+                console.log('Admin registration successful, ID:', result.rows[0].id);
 
                 res.json({
                     success: true,
                     message: "Admin registered successfully",
-                    adminId: result.insertId,
+                    adminId: result.rows[0].id,
                     data: {
                         first_name,
                         last_name,
@@ -904,7 +921,7 @@ app.post("/api/admins/login", async (req, res) => {
         });
     }
 
-    const sql = "SELECT * FROM admins WHERE email = ? AND is_active = TRUE";
+    const sql = "SELECT * FROM admins WHERE email = $1 AND is_active = TRUE";
     
     db.query(sql, [email], async (err, result) => {
         if (err) {
@@ -915,9 +932,9 @@ app.post("/api/admins/login", async (req, res) => {
             });
         } 
         
-        console.log('Admin found in database:', result.length);
+        console.log('Admin found in database:', result.rows.length);
         
-        if (result.length === 0) {
+        if (result.rows.length === 0) {
             console.log('No admin found with email:', email);
             return res.status(401).json({ 
                 success: false,
@@ -925,7 +942,7 @@ app.post("/api/admins/login", async (req, res) => {
             });
         }
         
-        const admin = result[0];
+        const admin = result.rows[0];
         console.log('Admin data:', {
             id: admin.id,
             email: admin.email,
