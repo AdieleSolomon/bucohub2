@@ -1,0 +1,28 @@
+{
+  "name": "bucohub-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "BUCOHub Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "mysql2": "^3.6.5",
+    "bcryptjs": "^2.4.3",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "@json2csv/plainjs": "^7.0.6",
+    "pdfkit": "^0.14.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["education", "student-management", "api"],
+  "author": "BUCODel",
+  "license": "MIT"
+}

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUCODel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Your existing CSS remains the same - it's well organized */
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+        
+        * { 
+            margin: 0;
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .page-container {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* ... (all your existing CSS remains exactly the same) ... */
+        
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header>
+            <div class="logo-container">
+                <div class="logo">BUC<div class="gear"></div>Del</div>
+                <div class="tagline">TECHNOLOGICAL HUB</div>
+            </div>
+
+            <!-- Three-line button -->
+            <button class="three-line-btn" id="threeLineBtn" title="Toggle Menu">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </button>
+
+            <!-- Side panel -->
+            <div class="side-panel" id="sidePanel">
+                <div class="side-panel-header">
+                    <div class="side-panel-title">BUCODel Menu</div>
+                    <button class="side-panel-close" id="sidePanelClose">&times;</button>
+                </div>
+                <div class="side-panel-content">
+                    <button class="side-panel-option" onclick="window.location.href='index.html'">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                    <button class="side-panel-option" onclick="openRegistrationModal()">
+                        <i class="fas fa-user-plus"></i> Register Now
+                    </button>
+                    <button class="side-panel-option" onclick="openStudentLoginModal()">
+                        <i class="fas fa-user-graduate"></i> Student Login
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='admin.html'">
+                        <i class="fas fa-user-shield"></i> Admin Login
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='courses.html'">
+                        <i class="fas fa-book"></i> Courses
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='about.html'">
+                        <i class="fas fa-info-circle"></i> About Us
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='contact.html'">
+                        <i class="fas fa-phone"></i> Contact
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="hero-section">
+            <div class="banner-image">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80" alt="Students learning technology">
+            </div>
+        </div>
+        <div class="yellow-accent"></div>
+        <main class="content">
+            <h1 class="main-title">Get into<br> <small>Tech</small></h1>
+            <ul class="tech-list">
+                <li>UI/UX Design</li>
+                <li>Front-end Dev.</li>
+                <li>Back-end Dev.</li>
+                <li>Full stack Dev.</li>
+                <li>Data Science</li>
+                <li>
+                    Digital Marketing
+                    <button class="yellow-btn" onclick="openRegistrationModal()">Register Now</button>
+                </li>
+            </ul>
+
+            <hr />
+
+            <div class="contact-info">
+                <div class="contact-row">
+                    <div class="phone-numbers">08064530154 <br> 08058100008</div>
+                    <div class="address">BUCODel Building,<br> Behind Deeper Life Church,<br> Tudun wada, Gusau State</div>
+                </div>
+            </div>
+            <footer class="website">www.codel.babcock.edu.ng/techhub</footer>
+        </main>
+    </div>
+
+    <!-- Student Login Modal -->
+    <div class="modal-overlay student-login-modal" id="studentLoginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Student Portal</div>
+                <button class="close-btn" onclick="closeStudentLoginModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="login-tabs">
+                    <button class="login-tab active" onclick="switchLoginTab('login', this)">Login</button>
+                    <button class="login-tab" onclick="switchLoginTab('register', this)">Register</button>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="studentLoginForm" class="login-form-container active">
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email *</label>
+                            <input type="email" id="loginEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password *</label>
+                            <input type="password" id="loginPassword" name="password" required>
+                            <div style="text-align: right; margin-top: 5px;">
+                                <small style="color: #b8a3c7; cursor: pointer;" onclick="showForgotPassword()">
+                                    Forgot Password?
+                                </small>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeStudentLoginModal()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Success Message with Login Button -->
+                <div class="success-message" id="loginSuccessMessage">
+                    <h3>Registration Successful!!!</h3>
+                    <p>Your account has been created successfully. Please login to access the student portal.</p>
+                    <div class="success-actions">
+                        <button class="btn btn-primary" onclick="openStudentLoginModal()">
+                            <i class="fas fa-sign-in-alt"></i> Login to Student Portal
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeRegistrationModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div class="modal-overlay" id="registrationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">BUC<div class="gear"></div>Del Registration</div>
+                <button class="close-btn" onclick="closeRegistrationModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="registrationForm">
+                    <!-- Image Upload Section -->
+                    <div class="image-upload-container">
+                        <div class="image-preview" id="imagePreview">
+                            <div class="placeholder">
+                                <i class="fas fa-user" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
+                                No Image Selected
+                            </div>
+                            <img id="previewImage" src="" alt="Profile Preview">
+                            <button type="button" class="remove-image" id="removeImage" title="Remove image">
+                                &times;
+                            </button>
+                        </div>
+                        
+                        <label for="profilePicture"> Upload Profile Picture</label>
+                        <input type="file" id="profilePicture" name="profilePicture" accept="image/*" class="file-input">
+                        <button type="button" class="upload-btn" onclick="document.getElementById('profilePicture').click()">
+                            <i class="fas fa-camera"></i> Upload Photo
+                        </button>
+                        <div class="upload-info">Max file size: 5MB • Supported formats: JPG, PNG, GIF</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" name="password" required minlength="6">
+                        <div class="upload-info">Minimum 6 characters</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password *</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" name="age" min="16" max="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="education">Education</label>
+                        <input type="text" id="education" name="education" placeholder="Highest education level">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="experience">Experience</label>
+                        <input type="text" id="experience" name="experience" placeholder="Previous experience (if any)">
+                    </div>
+
+                    <fieldset class="form-group">
+                        <legend>Courses of Interest</legend>
+                        <div class="checkbox-group">
+                            <div>
+                                <input type="checkbox" id="course_ui" name="courses" value="UI/UX Design">
+                                <label for="course_ui"> UI/UX Design</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="course_web" name="courses" value="Web Development">
+                                <label for="course_web"> Web Development</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="course_mobile" name="courses" value="Mobile App Development">
+                                <label for="course_mobile"> Mobile App Development</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="course_data" name="courses" value="Data Science">
+                                <label for="course_data"> Data Science</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="course_ai" name="courses" value="Artificial Intelligence">
+                                <label for="course_ai"> Artificial Intelligence</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="course_cyber" name="courses" value="Cybersecurity">
+                                <label for="course_cyber"> Cybersecurity</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="form-group">
+                        <label for="motivation">Motivation</label>
+                        <textarea id="motivation" name="motivation" placeholder="Why do you want to join BUCODel?"></textarea>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">Submit Registration</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeRegistrationModal()">Cancel</button>
+                    </div>
+                </form>
+                <div class="success-message" id="successMessage">
+                    <h3>Registration Successful!!!</h3>
+                    <p>Thank you for registering with BUCODel. Please login to access the student portal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div class="modal-overlay" id="passwordResetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Reset Password</div>
+                <button class="close-btn" onclick="closePasswordResetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="reset-tabs">
+                    <button class="reset-tab active" onclick="switchResetTab('request', this)">Request Reset</button>
+                    <button class="reset-tab" onclick="switchResetTab('reset', this)">Enter Code</button>
+                </div>
+                
+                <!-- Request Reset Form -->
+                <div id="requestResetForm" class="reset-form-container active">
+                    <form id="resetRequestForm">
+                        <div class="form-group">
+                            <label for="resetEmail">Email Address *</label>
+                            <input type="email" id="resetEmail" name="email" required>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Send Reset Link</button>
+                            <button type="button" class="btn btn-secondary" onclick="closePasswordResetModal()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Reset Password Form -->
+                <div id="resetPasswordForm" class="reset-form-container">
+                    <form id="resetForm">
+                        <div class="form-group">
+                            <label for="resetCode">Reset Code *</label>
+                            <input type="text" id="resetCode" name="code" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password *</label>
+                            <input type="password" id="newPassword" name="newPassword" required minlength="6">
+                            <div class="upload-info">Minimum 6 characters</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirm New Password *</label>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Reset Password</button>
+                            <button type="button" class="btn btn-secondary" onclick="closePasswordResetModal()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Reset Success Message -->
+                <div class="reset-message" id="resetSuccessMessage">
+                    <h3>Reset Email Sent!</h3>
+                    <p>We've sent a password reset link to your email address.</p>
+                    <p>Please check your inbox and follow the instructions.</p>
+                    <div class="countdown" id="resendCountdown"></div>
+                    <div class="resend-link" id="resendLink" onclick="resendResetEmail()">Resend Email</div>
+                </div>
+                
+                <!-- Password Reset Success Message -->
+                <div class="reset-message" id="passwordResetSuccessMessage">
+                    <h3>Password Reset Successful!</h3>
+                    <p>Your password has been successfully reset.</p>
+                    <div class="success-actions">
+                        <button class="btn btn-primary" onclick="closePasswordResetModal(); openStudentLoginModal();">
+                            <i class="fas fa-sign-in-alt"></i> Login Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================
+        // CONFIGURATION
+        // =============================
+        const CONFIG = {
+            API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000'
+                : 'https://your-backend-app.onrender.com', // UPDATE THIS WITH YOUR ACTUAL RENDER URL
+            UPLOAD: {
+                MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+                ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+            }
+        };
+
+        // =============================
+        // DOM ELEMENTS
+        // =============================
+        const DOM = {
+            threeLineBtn: document.getElementById('threeLineBtn'),
+            sidePanel: document.getElementById('sidePanel'),
+            sidePanelClose: document.getElementById('sidePanelClose'),
+            modals: {
+                registration: document.getElementById('registrationModal'),
+                studentLogin: document.getElementById('studentLoginModal'),
+                passwordReset: document.getElementById('passwordResetModal')
+            }
+        };
+
+        // =============================
+        // STATE MANAGEMENT
+        // =============================
+        const state = {
+            currentStudent: null,
+            isSidePanelOpen: false
+        };
+
+        // =============================
+        // NAVIGATION FUNCTIONALITY
+        // =============================
+        function toggleSidePanel() {
+            state.isSidePanelOpen = !state.isSidePanelOpen;
+            DOM.threeLineBtn.classList.toggle('active');
+            DOM.sidePanel.classList.toggle('active');
+        }
+
+        function closeSidePanelOnClickOutside(event) {
+            const isClickInsideSidePanel = DOM.sidePanel.contains(event.target);
+            const isClickOnMenuButton = DOM.threeLineBtn.contains(event.target);
+            
+            if (!isClickInsideSidePanel && !isClickOnMenuButton && state.isSidePanelOpen) {
+                toggleSidePanel();
+            }
+        }
+
+        // =============================
+        // MODAL MANAGEMENT
+        // =============================
+        const ModalManager = {
+            openRegistration() {
+                DOM.modals.registration.classList.add('show');
+                this.closeSidePanelIfOpen();
+            },
+
+            closeRegistration() {
+                DOM.modals.registration.classList.remove('show');
+                FormHandler.resetRegistrationForm();
+            },
+
+            openStudentLogin() {
+                DOM.modals.studentLogin.classList.add('show');
+                this.closeSidePanelIfOpen();
+            },
+
+            closeStudentLogin() {
+                DOM.modals.studentLogin.classList.remove('show');
+                FormHandler.resetLoginForm();
+            },
+
+            openPasswordReset() {
+                DOM.modals.passwordReset.classList.add('show');
+                FormHandler.resetPasswordResetModal();
+                this.closeSidePanelIfOpen();
+            },
+
+            closePasswordReset() {
+                DOM.modals.passwordReset.classList.remove('show');
+                FormHandler.resetPasswordResetModal();
+            },
+
+            closeSidePanelIfOpen() {
+                if (state.isSidePanelOpen) {
+                    toggleSidePanel();
+                }
+            },
+
+            switchLoginTab(tab, element) {
+                document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+                element.classList.add('active');
+                
+                document.getElementById('studentLoginForm').classList.remove('active');
+                
+                if (tab === 'login') {
+                    document.getElementById('studentLoginForm').classList.add('active');
+                    FormHandler.resetLoginSuccessMessage();
+                } else if (tab === 'register') {
+                    this.closeStudentLogin();
+                    this.openRegistration();
+                }
+            },
+
+            switchResetTab(tab, element) {
+                document.querySelectorAll('.reset-tab').forEach(t => t.classList.remove('active'));
+                element.classList.add('active');
+                
+                document.getElementById('requestResetForm').classList.remove('active');
+                document.getElementById('resetPasswordForm').classList.remove('active');
+                
+                if (tab === 'request') {
+                    document.getElementById('requestResetForm').classList.add('active');
+                } else if (tab === 'reset') {
+                    document.getElementById('resetPasswordForm').classList.add('active');
+                }
+            }
+        };
+
+        // =============================
+        // IMAGE UPLOAD HANDLER
+        // =============================
+        const ImageUpload = {
+            init() {
+                const profilePictureInput = document.getElementById('profilePicture');
+                const previewImage = document.getElementById('previewImage');
+                const imagePreview = document.getElementById('imagePreview');
+                const removeImageBtn = document.getElementById('removeImage');
+                const placeholder = imagePreview.querySelector('.placeholder');
+
+                profilePictureInput.addEventListener('change', (event) => {
+                    this.handleFileSelection(event, previewImage, placeholder, removeImageBtn);
+                });
+
+                removeImageBtn.addEventListener('click', () => {
+                    this.removeImage(profilePictureInput, previewImage, placeholder, removeImageBtn);
+                });
+
+                this.initDragAndDrop(imagePreview, profilePictureInput);
+            },
+
+            handleFileSelection(event, previewImage, placeholder, removeImageBtn) {
+                const file = event.target.files[0];
+                
+                if (!file) return;
+
+                if (!this.validateFile(file)) {
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    removeImageBtn.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            },
+
+            validateFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file (JPG, PNG, GIF)');
+                    return false;
+                }
+                
+                if (file.size > CONFIG.UPLOAD.MAX_FILE_SIZE) {
+                    alert('File size must be less than 5MB');
+                    return false;
+                }
+                
+                return true;
+            },
+
+            removeImage(input, previewImage, placeholder, removeImageBtn) {
+                input.value = '';
+                previewImage.src = '';
+                previewImage.style.display = 'none';
+                removeImageBtn.style.display = 'none';
+                placeholder.style.display = 'block';
+            },
+
+            initDragAndDrop(imagePreview, fileInput) {
+                imagePreview.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    imagePreview.classList.add('dragover');
+                });
+
+                imagePreview.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    imagePreview.classList.remove('dragover');
+                });
+
+                imagePreview.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    imagePreview.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        fileInput.files = files;
+                        fileInput.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                imagePreview.addEventListener('click', (e) => {
+                    if (e.target === imagePreview || e.target.classList.contains('placeholder')) {
+                        fileInput.click();
+                    }
+                });
+            },
+
+            reset() {
+                const profilePictureInput = document.getElementById('profilePicture');
+                const previewImage = document.getElementById('previewImage');
+                const imagePreview = document.getElementById('imagePreview');
+                const removeImageBtn = document.getElementById('removeImage');
+                const placeholder = imagePreview.querySelector('.placeholder');
+                
+                this.removeImage(profilePictureInput, previewImage, placeholder, removeImageBtn);
+                imagePreview.classList.remove('dragover');
+            }
+        };
+
+        // =============================
+        // FORM HANDLING
+        // =============================
+        const FormHandler = {
+            init() {
+                this.initRegistrationForm();
+                this.initLoginForm();
+                this.initPasswordReset();
+            },
+
+            // Registration Form
+            initRegistrationForm() {
+                document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.handleRegistration();
+                });
+            },
+
+            async handleRegistration() {
+                const formData = this.getRegistrationFormData();
+                
+                if (!this.validateRegistrationForm(formData)) {
+                    return;
+                }
+
+                try {
+                    await this.submitRegistration(formData);
+                } catch (error) {
+                    this.handleRegistrationError(error);
+                }
+            },
+
+            getRegistrationFormData() {
+                const selectedCourses = Array.from(document.querySelectorAll('input[name="courses"]:checked'))
+                    .map(checkbox => checkbox.value);
+
+                const formData = new FormData();
+                formData.append('firstName', document.getElementById('firstName').value.trim());
+                formData.append('lastName', document.getElementById('lastName').value.trim());
+                formData.append('email', document.getElementById('email').value.trim());
+                formData.append('phone', document.getElementById('phone').value.trim());
+                formData.append('password', document.getElementById('password').value);
+                formData.append('age', document.getElementById('age').value);
+                formData.append('education', document.getElementById('education').value);
+                formData.append('experience', document.getElementById('experience').value);
+                formData.append('motivation', document.getElementById('motivation').value);
+
+                selectedCourses.forEach(course => {
+                    formData.append('courses', course);
+                });
+
+                const profilePictureInput = document.getElementById('profilePicture');
+                if (profilePictureInput.files[0]) {
+                    formData.append('profilePicture', profilePictureInput.files[0]);
+                }
+
+                return formData;
+            },
+
+            validateRegistrationForm(formData) {
+                const required = ['firstName', 'lastName', 'email', 'phone', 'password'];
+                for (let field of required) {
+                    if (!formData.get(field)) {
+                        alert(`Please fill in the ${field} field`);
+                        return false;
+                    }
+                }
+
+                if (!this.validatePassword()) {
+                    return false;
+                }
+
+                return true;
+            },
+
+            async submitRegistration(formData) {
+                const submitBtn = document.querySelector('#registrationForm button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Registering...';
+
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/register`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.showRegistrationSuccess(result);
+                } else {
+                    throw new Error(result.error || "Registration failed");
+                }
+            },
+
+            showRegistrationSuccess(result) {
+                document.getElementById('registrationForm').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+                setTimeout(() => {
+                    ModalManager.closeRegistration();
+                    this.showLoginSuccessMessage();
+                }, 2000);
+            },
+
+            showLoginSuccessMessage() {
+                ModalManager.openStudentLogin();
+                document.getElementById('studentLoginForm').style.display = 'none';
+                document.getElementById('loginSuccessMessage').style.display = 'block';
+            },
+
+            resetRegistrationForm() {
+                document.getElementById('registrationForm').reset();
+                document.getElementById('registrationForm').style.display = 'block';
+                document.getElementById('successMessage').style.display = 'none';
+                ImageUpload.reset();
+            },
+
+            // Login Form
+            initLoginForm() {
+                document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.handleLogin();
+                });
+            },
+
+            async handleLogin() {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+                
+                if (!this.validateLoginForm(email, password)) {
+                    return;
+                }
+
+                try {
+                    await this.submitLogin(email, password);
+                } catch (error) {
+                    this.handleLoginError(error);
+                }
+            },
+
+            validateLoginForm(email, password) {
+                if (!email || !password) {
+                    this.showLoginError('Please enter both email and password');
+                    return false;
+                }
+                
+                if (!this.isValidEmail(email)) {
+                    this.showLoginError('Please enter a valid email address');
+                    return false;
+                }
+                
+                return true;
+            },
+
+            async submitLogin(email, password) {
+                const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Logging in...';
+
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/students/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        email: email.toLowerCase(),
+                        password: password 
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { error: 'Login failed. Please try again.' };
+                    }
+                    throw new Error(errorData.error || errorData.message || `Login failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success && data.student) {
+                    this.handleLoginSuccess(data);
+                } else {
+                    throw new Error(data.error || data.message || 'Login failed. Please check your credentials.');
+                }
+            },
+
+            handleLoginSuccess(data) {
+                localStorage.setItem('studentData', JSON.stringify(data.student));
+                localStorage.setItem('studentLoggedIn', 'true');
+                localStorage.setItem('studentToken', data.token || 'authenticated');
+                localStorage.setItem('studentId', data.student.id);
+                
+                this.showLoginSuccess('Login successful! Redirecting...');
+                
+                setTimeout(() => {
+                    window.location.href = 'student-profile.html';
+                }, 1500);
+            },
+
+            handleLoginError(error) {
+                console.error('Login error:', error);
+                
+                let errorMessage = error.message || 'Login failed. Please try again.';
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error: Cannot connect to server. Please make sure your backend server is running.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Server endpoint not found. Please check the API URL.';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+                
+                this.showLoginError(errorMessage);
+            },
+
+            // Password Validation
+            validatePassword() {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password.length < 6) {
+                    alert('Password must be at least 6 characters long');
+                    return false;
+                }
+                
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return false;
+                }
+                
+                return true;
+            },
+
+            validateNewPassword() {
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+                
+                if (newPassword.length < 6) {
+                    alert('Password must be at least 6 characters long');
+                    return false;
+                }
+                
+                if (newPassword !== confirmNewPassword) {
+                    alert('Passwords do not match');
+                    return false;
+                }
+                
+                return true;
+            },
+
+            // Utility Functions
+            isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            },
+
+            showLoginError(message) {
+                const existingError = document.querySelector('.login-error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                const errorElement = document.createElement('div');
+                errorElement.className = 'login-error-message';
+                errorElement.textContent = message;
+                
+                const loginForm = document.getElementById('studentLoginForm');
+                if (loginForm) {
+                    loginForm.insertBefore(errorElement, loginForm.firstChild);
+                    
+                    setTimeout(() => {
+                        if (errorElement.parentNode) {
+                            errorElement.remove();
+                        }
+                    }, 5000);
+                }
+            },
+
+            showLoginSuccess(message) {
+                const existingError = document.querySelector('.login-error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                const successElement = document.createElement('div');
+                successElement.className = 'login-success-message';
+                successElement.textContent = message;
+                
+                const loginForm = document.getElementById('studentLoginForm');
+                if (loginForm) {
+                    loginForm.insertBefore(successElement, loginForm.firstChild);
+                }
+            },
+
+            resetLoginForm() {
+                document.getElementById('loginForm').reset();
+                
+                const existingError = document.querySelector('.login-error-message');
+                if (existingError) existingError.remove();
+                
+                const existingSuccess = document.querySelector('.login-success-message');
+                if (existingSuccess) existingSuccess.remove();
+            },
+
+            resetLoginSuccessMessage() {
+                document.getElementById('studentLoginForm').style.display = 'block';
+                document.getElementById('loginSuccessMessage').style.display = 'none';
+                this.resetLoginForm();
+            },
+
+            // Password Reset (placeholder implementation)
+            initPasswordReset() {
+                // Implementation for password reset would go here
+                // This is currently a placeholder as mentioned in your original code
+            },
+
+            resetPasswordResetModal() {
+                // Reset password reset modal implementation
+            }
+        };
+
+        // =============================
+        // PASSWORD RESET FUNCTIONALITY
+        // =============================
+        function showForgotPassword() {
+            ModalManager.closeStudentLogin();
+            ModalManager.openPasswordReset();
+        }
+
+        // =============================
+        // EVENT LISTENERS
+        // =============================
+        function initializeEventListeners() {
+            // Navigation
+            DOM.threeLineBtn.addEventListener('click', toggleSidePanel);
+            DOM.sidePanelClose.addEventListener('click', toggleSidePanel);
+            document.addEventListener('click', closeSidePanelOnClickOutside);
+            
+            // Modal closing
+            DOM.modals.registration.addEventListener('click', (e) => {
+                if (e.target === DOM.modals.registration) ModalManager.closeRegistration();
+            });
+            
+            DOM.modals.studentLogin.addEventListener('click', (e) => {
+                if (e.target === DOM.modals.studentLogin) ModalManager.closeStudentLogin();
+            });
+            
+            DOM.modals.passwordReset.addEventListener('click', (e) => {
+                if (e.target === DOM.modals.passwordReset) ModalManager.closePasswordReset();
+            });
+            
+            // Escape key to close modals
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    ModalManager.closeRegistration();
+                    ModalManager.closeStudentLogin();
+                    ModalManager.closePasswordReset();
+                }
+            });
+        }
+
+        // =============================
+        // GLOBAL FUNCTIONS (for HTML onclick)
+        // =============================
+        window.openRegistrationModal = () => ModalManager.openRegistration();
+        window.closeRegistrationModal = () => ModalManager.closeRegistration();
+        window.openStudentLoginModal = () => ModalManager.openStudentLogin();
+        window.closeStudentLoginModal = () => ModalManager.closeStudentLogin();
+        window.openPasswordResetModal = () => ModalManager.openPasswordReset();
+        window.closePasswordResetModal = () => ModalManager.closePasswordReset();
+        window.switchLoginTab = (tab, element) => ModalManager.switchLoginTab(tab, element);
+        window.switchResetTab = (tab, element) => ModalManager.switchResetTab(tab, element);
+        window.showForgotPassword = showForgotPassword;
+
+        // =============================
+        // INITIALIZATION
+        // =============================
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            ImageUpload.init();
+            FormHandler.init();
+            
+            console.log('BUCODel Frontend Initialized');
+            console.log('API Base URL:', CONFIG.API_BASE_URL);
+            console.log('Environment:', window.location.hostname === 'localhost' ? 'Development' : 'Production');
+        });
+    </script>
+</body>
+</html>

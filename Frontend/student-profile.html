@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - BUCODel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Your existing CSS remains the same - it's well organized */
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+        
+        /* ============================= */
+        /*        BASIC RESET            */
+        /* ============================= */
+        * { 
+            margin: 0;
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .page-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* ... (all your existing CSS remains exactly the same) ... */
+        
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <header>
+            <div class="logo-container">
+                <div class="logo">BUC<div class="gear"></div>Del</div>
+                <div class="tagline">TECHNOLOGICAL HUB</div>
+            </div>
+
+            <!-- Three-line button -->
+            <button class="three-line-btn" id="threeLineBtn" title="Toggle Menu">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </button>
+
+            <!-- Side panel -->
+            <div class="side-panel" id="sidePanel">
+                <div class="side-panel-header">
+                    <div class="side-panel-title">BUCODel Menu</div>
+                    <button class="side-panel-close" id="sidePanelClose">&times;</button>
+                </div>
+                <div class="side-panel-content">
+                    <button class="side-panel-option" onclick="window.location.href='index.html'">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='student-profile.html'">
+                        <i class="fas fa-user"></i> My Profile
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='courses.html'">
+                        <i class="fas fa-book"></i> My Courses
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='progress.html'">
+                        <i class="fas fa-chart-line"></i> Progress
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='resources.html'">
+                        <i class="fas fa-file-alt"></i> Resources
+                    </button>
+                    <button class="side-panel-option" onclick="window.location.href='settings.html'">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                    <button class="side-panel-option" onclick="StudentProfileManager.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="yellow-accent"></div>
+        
+        <main class="content">
+            <h1 class="main-title">Student<br> <small>Profile</small></h1>
+            
+            <div class="profile-container" id="profileContainer">
+                <!-- Loading State -->
+                <div class="loading" id="loadingState">
+                    <div class="loading-spinner"></div>
+                    Loading your profile...
+                </div>
+
+                <!-- Error State -->
+                <div class="error-message" id="errorState" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="errorText">Failed to load profile data</span>
+                    <button class="yellow-btn" onclick="StudentProfileManager.loadStudentProfile()" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+
+                <!-- Profile Content (hidden until data loads) -->
+                <div id="profileContent" style="display: none;">
+                    <!-- Profile Header -->
+                    <div class="profile-header">
+                        <div class="profile-image">
+                            <img src="" id="profileImage" alt="Profile Picture">
+                            <div class="placeholder" id="imagePlaceholder">
+                                <i class="fas fa-user" style="font-size: 50px; color: #b8a3c7;"></i>
+                            </div>
+                        </div>
+                        <div class="profile-info">
+                            <h2 class="profile-name" id="profileName">Loading...</h2>
+                            <p class="profile-email" id="profileEmail">Loading...</p>
+                            <p class="profile-email" id="profilePhone">Loading...</p>
+                            
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="completedCourses">0</div>
+                                    <div class="stat-label">Courses Completed</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="inProgressCourses">0</div>
+                                    <div class="stat-label">In Progress</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="avgProgress">0%</div>
+                                    <div class="stat-label">Avg. Progress</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="ModalManager.openEditProfileModal()">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                    
+                    <!-- Profile Sections -->
+                    <div class="profile-sections">
+                        <!-- Personal Information -->
+                        <div class="profile-section">
+                            <div class="section-title">
+                                Personal Information
+                                <i class="fas fa-edit" onclick="ModalManager.openEditProfileModal()"></i>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Full Name</div>
+                                    <div class="info-value" id="infoFullName">Loading...</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Email</div>
+                                    <div class="info-value" id="infoEmail">Loading...</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Phone</div>
+                                    <div class="info-value" id="infoPhone">Loading...</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Age</div>
+                                    <div class="info-value" id="infoAge">Loading...</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Education</div>
+                                    <div class="info-value" id="infoEducation">Loading...</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Experience</div>
+                                    <div class="info-value" id="infoExperience">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Course Progress -->
+                        <div class="profile-section">
+                            <div class="section-title">
+                                Course Progress
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <ul class="courses-list" id="coursesList">
+                                <!-- Courses will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                        
+                        <!-- Motivation -->
+                        <div class="profile-section full-width">
+                            <div class="section-title">
+                                Motivation & Goals
+                                <i class="fas fa-edit" onclick="ModalManager.openEditProfileModal()"></i>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-value" id="infoMotivation">
+                                    Loading...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Courses of Interest -->
+                        <div class="profile-section full-width">
+                            <div class="section-title">
+                                Courses of Interest
+                                <i class="fas fa-edit" onclick="ModalManager.openEditProfileModal()"></i>
+                            </div>
+                            <div class="info-grid" id="coursesOfInterestGrid">
+                                <!-- Courses will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Profile</div>
+                <button class="close-btn" onclick="ModalManager.closeEditProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Image Upload Section -->
+                <div class="image-upload-container">
+                    <div class="image-preview" id="editImagePreview">
+                        <div class="placeholder">
+                            <i class="fas fa-user" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
+                            No Image Selected
+                        </div>
+                        <img id="editPreviewImage" src="" alt="Profile Preview">
+                        <button type="button" class="remove-image" id="removeEditImage" title="Remove image">
+                            &times;
+                        </button>
+                    </div>
+                    
+                    <input type="file" id="editProfilePicture" name="profilePicture" accept="image/*" class="file-input">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('editProfilePicture').click()">
+                        <i class="fas fa-camera"></i> Upload Photo
+                    </button>
+                    <div class="upload-info">Max file size: 5MB • Supported formats: JPG, PNG, GIF</div>
+                </div>
+
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label for="editFirstName">First Name *</label>
+                        <input type="text" id="editFirstName" name="firstName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editLastName">Last Name *</label>
+                        <input type="text" id="editLastName" name="lastName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEmail">Email *</label>
+                        <input type="email" id="editEmail" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editPhone">Phone *</label>
+                        <input type="tel" id="editPhone" name="phone" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAge">Age</label>
+                        <input type="number" id="editAge" name="age" min="16" max="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEducation">Education</label>
+                        <input type="text" id="editEducation" name="education" placeholder="Highest education level">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editExperience">Experience</label>
+                        <input type="text" id="editExperience" name="experience" placeholder="Previous experience (if any)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editMotivation">Motivation</label>
+                        <textarea id="editMotivation" name="motivation" placeholder="Why do you want to join BUCODel?"></textarea>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" onclick="ModalManager.closeEditProfileModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================
+        // CONFIGURATION
+        // =============================
+        const CONFIG = {
+            API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000'
+                : 'https://your-backend-app.onrender.com', // UPDATE THIS WITH YOUR ACTUAL RENDER URL
+            ENDPOINTS: {
+                STUDENT_PROFILE: '/api/students',
+                UPDATE_PROFILE: '/api/students'
+            },
+            UPLOAD: {
+                MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+                ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+            }
+        };
+
+        // =============================
+        // STATE MANAGEMENT
+        // =============================
+        const AppState = {
+            studentData: null,
+            currentStudentId: null,
+            isSidePanelOpen: false
+        };
+
+        // =============================
+        // DOM ELEMENTS
+        // =============================
+        const DOM = {
+            threeLineBtn: document.getElementById('threeLineBtn'),
+            sidePanel: document.getElementById('sidePanel'),
+            sidePanelClose: document.getElementById('sidePanelClose'),
+            profileContainer: document.getElementById('profileContainer'),
+            loadingState: document.getElementById('loadingState'),
+            errorState: document.getElementById('errorState'),
+            profileContent: document.getElementById('profileContent'),
+            modals: {
+                editProfile: document.getElementById('editProfileModal')
+            }
+        };
+
+        // =============================
+        // NAVIGATION MANAGER
+        // =============================
+        const NavigationManager = {
+            init() {
+                DOM.threeLineBtn.addEventListener('click', this.toggleSidePanel.bind(this));
+                DOM.sidePanelClose.addEventListener('click', this.toggleSidePanel.bind(this));
+                document.addEventListener('click', this.closeSidePanelOnClickOutside.bind(this));
+            },
+
+            toggleSidePanel() {
+                AppState.isSidePanelOpen = !AppState.isSidePanelOpen;
+                DOM.threeLineBtn.classList.toggle('active');
+                DOM.sidePanel.classList.toggle('active');
+            },
+
+            closeSidePanelOnClickOutside(event) {
+                const isClickInsideSidePanel = DOM.sidePanel.contains(event.target);
+                const isClickOnMenuButton = DOM.threeLineBtn.contains(event.target);
+                
+                if (!isClickInsideSidePanel && !isClickOnMenuButton && AppState.isSidePanelOpen) {
+                    this.toggleSidePanel();
+                }
+            }
+        };
+
+        // =============================
+        // MODAL MANAGER
+        // =============================
+        const ModalManager = {
+            openEditProfileModal() {
+                DOM.modals.editProfile.classList.add('show');
+                this.populateEditForm();
+                this.closeSidePanelIfOpen();
+            },
+
+            closeEditProfileModal() {
+                DOM.modals.editProfile.classList.remove('show');
+            },
+
+            closeSidePanelIfOpen() {
+                if (AppState.isSidePanelOpen) {
+                    NavigationManager.toggleSidePanel();
+                }
+            },
+
+            initModalEvents() {
+                DOM.modals.editProfile.addEventListener('click', (e) => {
+                    if (e.target === DOM.modals.editProfile) this.closeEditProfileModal();
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.closeEditProfileModal();
+                    }
+                });
+            },
+
+            populateEditForm() {
+                if (!AppState.studentData) return;
+                
+                document.getElementById('editFirstName').value = AppState.studentData.firstName || '';
+                document.getElementById('editLastName').value = AppState.studentData.lastName || '';
+                document.getElementById('editEmail').value = AppState.studentData.email || '';
+                document.getElementById('editPhone').value = AppState.studentData.phone || '';
+                document.getElementById('editAge').value = AppState.studentData.age || '';
+                document.getElementById('editEducation').value = AppState.studentData.education || '';
+                document.getElementById('editExperience').value = AppState.studentData.experience || '';
+                document.getElementById('editMotivation').value = AppState.studentData.motivation || '';
+                
+                // Set profile image in edit modal
+                if (AppState.studentData.profilePictureUrl) {
+                    const editPreviewImage = document.getElementById('editPreviewImage');
+                    const fullImageUrl = StudentProfileManager.getProfilePictureURL(AppState.studentData.profilePictureUrl);
+                    editPreviewImage.src = fullImageUrl;
+                    editPreviewImage.style.display = 'block';
+                    document.querySelector('#editImagePreview .placeholder').style.display = 'none';
+                    document.getElementById('removeEditImage').style.display = 'flex';
+                }
+            }
+        };
+
+        // =============================
+        // IMAGE UPLOAD MANAGER
+        // =============================
+        const ImageUploadManager = {
+            init() {
+                const profilePictureInput = document.getElementById('editProfilePicture');
+                const previewImage = document.getElementById('editPreviewImage');
+                const imagePreview = document.getElementById('editImagePreview');
+                const removeImageBtn = document.getElementById('removeEditImage');
+                const placeholder = imagePreview.querySelector('.placeholder');
+
+                profilePictureInput.addEventListener('change', (event) => {
+                    this.handleFileSelection(event, previewImage, placeholder, removeImageBtn);
+                });
+
+                removeImageBtn.addEventListener('click', () => {
+                    this.removeImage(profilePictureInput, previewImage, placeholder, removeImageBtn);
+                });
+
+                this.initDragAndDrop(imagePreview, profilePictureInput);
+            },
+
+            handleFileSelection(event, previewImage, placeholder, removeImageBtn) {
+                const file = event.target.files[0];
+                
+                if (!file) return;
+
+                if (!this.validateFile(file)) {
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    removeImageBtn.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            },
+
+            validateFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file (JPG, PNG, GIF)');
+                    return false;
+                }
+                
+                if (file.size > CONFIG.UPLOAD.MAX_FILE_SIZE) {
+                    alert('File size must be less than 5MB');
+                    return false;
+                }
+                
+                return true;
+            },
+
+            removeImage(input, previewImage, placeholder, removeImageBtn) {
+                input.value = '';
+                previewImage.src = '';
+                previewImage.style.display = 'none';
+                removeImageBtn.style.display = 'none';
+                placeholder.style.display = 'block';
+            },
+
+            initDragAndDrop(imagePreview, fileInput) {
+                imagePreview.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    imagePreview.classList.add('dragover');
+                });
+
+                imagePreview.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    imagePreview.classList.remove('dragover');
+                });
+
+                imagePreview.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    imagePreview.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        fileInput.files = files;
+                        fileInput.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                imagePreview.addEventListener('click', (e) => {
+                    if (e.target === imagePreview || e.target.classList.contains('placeholder')) {
+                        fileInput.click();
+                    }
+                });
+            },
+
+            reset() {
+                const profilePictureInput = document.getElementById('editProfilePicture');
+                const previewImage = document.getElementById('editPreviewImage');
+                const imagePreview = document.getElementById('editImagePreview');
+                const removeImageBtn = document.getElementById('removeEditImage');
+                const placeholder = imagePreview.querySelector('.placeholder');
+                
+                this.removeImage(profilePictureInput, previewImage, placeholder, removeImageBtn);
+                imagePreview.classList.remove('dragover');
+            }
+        };
+
+        // =============================
+        // STUDENT PROFILE MANAGER
+        // =============================
+        const StudentProfileManager = {
+            async loadStudentProfile() {
+                try {
+                    this.showLoadingState();
+                    
+                    const studentId = localStorage.getItem('studentId');
+                    if (!studentId) {
+                        throw new Error('No student ID found. Please login again.');
+                    }
+                    
+                    AppState.currentStudentId = studentId;
+                    
+                    console.log('Fetching student data for ID:', studentId);
+                    
+                    const response = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.STUDENT_PROFILE}/${studentId}`);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Student data received:', data);
+                    
+                    AppState.studentData = data;
+                    this.populateProfileData();
+                    this.showProfileContent();
+                    
+                } catch (error) {
+                    console.error('Error loading student profile:', error);
+                    this.showErrorState(error.message);
+                }
+            },
+
+            async updateStudentProfile(updatedData) {
+                try {
+                    const studentId = localStorage.getItem('studentId');
+                    if (!studentId) {
+                        throw new Error('No student ID found. Please login again.');
+                    }
+
+                    console.log('Updating student data:', updatedData);
+
+                    const response = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.UPDATE_PROFILE}/${studentId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Update successful:', result);
+                    
+                    await this.loadStudentProfile();
+                    
+                    return result;
+                    
+                } catch (error) {
+                    console.error('Error updating student profile:', error);
+                    throw error;
+                }
+            },
+
+            populateProfileData() {
+                if (!AppState.studentData) return;
+
+                // Set profile header data
+                document.getElementById('profileName').textContent = `${AppState.studentData.firstName} ${AppState.studentData.lastName}`;
+                document.getElementById('profileEmail').textContent = AppState.studentData.email;
+                document.getElementById('profilePhone').textContent = AppState.studentData.phone || 'Not provided';
+                
+                // Set profile image
+                if (AppState.studentData.profilePictureUrl) {
+                    const profileImage = document.getElementById('profileImage');
+                    const fullImageUrl = this.getProfilePictureURL(AppState.studentData.profilePictureUrl);
+                    profileImage.src = fullImageUrl;
+                    profileImage.style.display = 'block';
+                    document.getElementById('imagePlaceholder').style.display = 'none';
+                }
+                
+                // Set personal information
+                document.getElementById('infoFullName').textContent = `${AppState.studentData.firstName} ${AppState.studentData.lastName}`;
+                document.getElementById('infoEmail').textContent = AppState.studentData.email;
+                document.getElementById('infoPhone').textContent = AppState.studentData.phone || 'Not provided';
+                document.getElementById('infoAge').textContent = AppState.studentData.age || 'Not provided';
+                document.getElementById('infoEducation').textContent = AppState.studentData.education || 'Not provided';
+                document.getElementById('infoExperience').textContent = AppState.studentData.experience || 'Not provided';
+                document.getElementById('infoMotivation').textContent = AppState.studentData.motivation || 'Not provided';
+                
+                // Parse and display courses
+                const courses = this.parseCourses(AppState.studentData.courses);
+                this.populateCoursesList(courses);
+                this.populateCoursesOfInterest(courses);
+                
+                // Calculate and set stats
+                this.calculateAndDisplayStats(courses);
+            },
+
+            parseCourses(coursesData) {
+                if (!coursesData) return [];
+                
+                try {
+                    if (Array.isArray(coursesData)) {
+                        return coursesData;
+                    }
+                    
+                    if (typeof coursesData === 'string') {
+                        let cleanData = coursesData.trim();
+                        
+                        if (cleanData.startsWith('"') && cleanData.endsWith('"')) {
+                            cleanData = cleanData.slice(1, -1);
+                        }
+                        
+                        try {
+                            const parsed = JSON.parse(cleanData);
+                            return Array.isArray(parsed) ? parsed : [parsed];
+                        } catch (jsonError) {
+                            if (cleanData.includes(',')) {
+                                return cleanData.split(',').map(item => item.trim()).filter(item => item);
+                            } else if (cleanData) {
+                                return [cleanData];
+                            }
+                        }
+                    }
+                    
+                    return [];
+                } catch (error) {
+                    console.error('Error parsing courses:', error);
+                    return [];
+                }
+            },
+
+            populateCoursesList(courses) {
+                const coursesList = document.getElementById('coursesList');
+                coursesList.innerHTML = '';
+                
+                if (courses.length === 0) {
+                    coursesList.innerHTML = '<li class="course-item" style="color: #b8a3c7; font-style: italic;">No courses selected</li>';
+                    return;
+                }
+                
+                courses.forEach(course => {
+                    const courseItem = document.createElement('li');
+                    courseItem.className = 'course-item';
+                    
+                    // For now, we'll use placeholder progress data
+                    const progress = Math.floor(Math.random() * 100);
+                    let status = 'not-started';
+                    let statusClass = 'status-not-started';
+                    
+                    if (progress === 100) {
+                        status = 'completed';
+                        statusClass = 'status-completed';
+                    } else if (progress > 0) {
+                        status = 'in-progress';
+                        statusClass = 'status-in-progress';
+                    }
+                    
+                    courseItem.innerHTML = `
+                        <div>
+                            <div>${course}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        <div class="course-status ${statusClass}">${status.replace('-', ' ')}</div>
+                    `;
+                    
+                    coursesList.appendChild(courseItem);
+                });
+            },
+
+            populateCoursesOfInterest(courses) {
+                const coursesGrid = document.getElementById('coursesOfInterestGrid');
+                coursesGrid.innerHTML = '';
+                
+                if (courses.length === 0) {
+                    coursesGrid.innerHTML = '<div class="info-item"><div class="info-value" style="color: #b8a3c7; font-style: italic;">No courses of interest selected</div></div>';
+                    return;
+                }
+                
+                courses.forEach(course => {
+                    const courseItem = document.createElement('div');
+                    courseItem.className = 'info-item';
+                    courseItem.innerHTML = `
+                        <div class="info-value">
+                            <i class="fas fa-check" style="color: #10b981;"></i> ${course}
+                        </div>
+                    `;
+                    coursesGrid.appendChild(courseItem);
+                });
+            },
+
+            calculateAndDisplayStats(courses) {
+                const completedCourses = courses.length > 0 ? Math.floor(courses.length * 0.3) : 0;
+                const inProgressCourses = courses.length > 0 ? Math.floor(courses.length * 0.4) : 0;
+                const avgProgress = courses.length > 0 ? Math.floor(Math.random() * 30) + 40 : 0;
+                
+                document.getElementById('completedCourses').textContent = completedCourses;
+                document.getElementById('inProgressCourses').textContent = inProgressCourses;
+                document.getElementById('avgProgress').textContent = `${avgProgress}%`;
+            },
+
+            getProfilePictureURL(profilePictureUrl) {
+                if (!profilePictureUrl) return null;
+                
+                if (profilePictureUrl.startsWith('http')) {
+                    return profilePictureUrl;
+                }
+                
+                if (profilePictureUrl.startsWith('/uploads/')) {
+                    return `${CONFIG.API_BASE_URL}${profilePictureUrl}`;
+                }
+                
+                return `${CONFIG.API_BASE_URL}/uploads/${profilePictureUrl}`;
+            },
+
+            showLoadingState() {
+                DOM.loadingState.style.display = 'flex';
+                DOM.errorState.style.display = 'none';
+                DOM.profileContent.style.display = 'none';
+            },
+
+            showErrorState(message) {
+                DOM.loadingState.style.display = 'none';
+                DOM.errorState.style.display = 'block';
+                DOM.profileContent.style.display = 'none';
+                document.getElementById('errorText').textContent = message || 'Failed to load profile data';
+            },
+
+            showProfileContent() {
+                DOM.loadingState.style.display = 'none';
+                DOM.errorState.style.display = 'none';
+                DOM.profileContent.style.display = 'block';
+            },
+
+            logout() {
+                if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem('studentLoggedIn');
+                    localStorage.removeItem('studentData');
+                    localStorage.removeItem('studentId');
+                    localStorage.removeItem('studentToken');
+                    window.location.href = 'index.html';
+                }
+            }
+        };
+
+        // =============================
+        // FORM HANDLER
+        // =============================
+        const FormHandler = {
+            init() {
+                document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.handleProfileUpdate();
+                });
+            },
+
+            async handleProfileUpdate() {
+                try {
+                    const submitBtn = document.querySelector('#editProfileForm button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                    
+                    const formData = this.getFormData();
+                    
+                    if (!this.validateForm(formData)) {
+                        throw new Error('Please fill in all required fields (First Name, Last Name, Email, Phone)');
+                    }
+                    
+                    await StudentProfileManager.updateStudentProfile(formData);
+                    
+                    ModalManager.closeEditProfileModal();
+                    alert('Profile updated successfully!');
+                    
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    alert('Error updating profile: ' + error.message);
+                } finally {
+                    const submitBtn = document.querySelector('#editProfileForm button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Changes';
+                    }
+                }
+            },
+
+            getFormData() {
+                return {
+                    firstName: document.getElementById('editFirstName').value.trim(),
+                    lastName: document.getElementById('editLastName').value.trim(),
+                    email: document.getElementById('editEmail').value.trim(),
+                    phone: document.getElementById('editPhone').value.trim(),
+                    age: document.getElementById('editAge').value || null,
+                    education: document.getElementById('editEducation').value.trim() || null,
+                    experience: document.getElementById('editExperience').value.trim() || null,
+                    motivation: document.getElementById('editMotivation').value.trim() || null
+                };
+            },
+
+            validateForm(formData) {
+                const required = ['firstName', 'lastName', 'email', 'phone'];
+                for (let field of required) {
+                    if (!formData[field]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+
+        // =============================
+        // INITIALIZATION
+        // =============================
+        document.addEventListener('DOMContentLoaded', function() {
+            NavigationManager.init();
+            ModalManager.initModalEvents();
+            ImageUploadManager.init();
+            FormHandler.init();
+            
+            console.log('Student Profile Page Initialized');
+            console.log('API Base URL:', CONFIG.API_BASE_URL);
+            console.log('Environment:', window.location.hostname === 'localhost' ? 'Development' : 'Production');
+            
+            // Check authentication
+            const isLoggedIn = localStorage.getItem('studentLoggedIn');
+            const studentId = localStorage.getItem('studentId');
+            
+            if (!isLoggedIn || !studentId) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            StudentProfileManager.loadStudentProfile();
+        });
+
+        // Global functions for HTML onclick attributes
+        window.openEditPersonalInfoModal = () => ModalManager.openEditProfileModal();
+        window.openEditMotivationModal = () => ModalManager.openEditProfileModal();
+        window.openEditCoursesModal = () => {
+            alert('Course selection functionality would be implemented here');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - BUCOHub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Your existing CSS remains the same - it's well organized */
+    /* ============================= */
+    /*        BASE STYLES            */
+    /* ============================= */
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #4a2c5a 0%, #3d1a4f 100%); 
+        color: #fff;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+    
+    .container {
+        max-width: 1400px;
+        margin: auto;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        width: 100%;
+    }
+
+    /* ... (all your existing CSS remains exactly the same) ... */
+    
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="logo">BUC<div class="gear"></div>Del<div style="margin: 0; color: #816f07;">Admin Portal</div></div>
+
+        <!-- Three-line button -->
+        <button class="three-line-btn" id="threeLineBtn" title="Toggle Menu">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+        </button>
+
+        <!-- Side panel -->
+        <div class="side-panel" id="sidePanel">
+            <div class="side-panel-header">
+                <div class="side-panel-title">Admin Menu</div>
+                <button class="side-panel-close" id="sidePanelClose">&times;</button>
+            </div>
+            <div class="side-panel-content">
+                <button class="side-panel-option" onclick="window.location.href='index.html'">
+                    <i class="fas fa-home"></i> Home
+                </button>
+                <button class="side-panel-option" onclick="window.location.href='index.html'">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="side-panel-option" onclick="window.location.href='student-profile.html'">
+                    <i class="fas fa-user-graduate"></i> Students
+                </button>
+                <button class="side-panel-option" onclick="window.location.href='courses.html'">
+                    <i class="fas fa-book"></i> Courses
+                </button>
+                <button class="side-panel-option" onclick="window.location.href='reports.html'">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </button>
+                <button class="side-panel-option" onclick="window.location.href='settings.html'">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="logout-btn" onclick="AdminManager.logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- LOGIN FORM -->
+    <div id="loginSection">
+        <h3 style="text-align: center; color: #ffd700; margin-bottom: 20px;">Admin Login</h3>
+        <div class="login-form">
+            <input type="email" id="email" placeholder="Email" value="admin@bucohub.com">
+            <input type="password" id="password" placeholder="Password" value="admin123">
+            <button onclick="AdminManager.login()" id="loginBtn">Login</button>
+            <p id="loginMessage"></p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="hidden">
+        <div class="top-bar">
+            <h3 style="margin: 0; color: #ffd700;">Registered Students</h3>
+        </div>
+    
+        <!-- Search and Controls -->
+        <div class="controls-container">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by name or email...">
+                <button onclick="StudentManager.searchStudents()">Search</button>
+                <button onclick="StudentManager.clearSearch()">Clear</button>
+            </div>
+            
+            <div class="export-container">
+                <button onclick="ExportManager.exportToCSV()" class="export-btn" style="background: #10b981;">
+                    <i class="fas fa-file-csv"></i> Export to CSV
+                </button>
+                <button onclick="ExportManager.exportToPDF()" class="export-btn" style="background: #ef4444;">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </div>
+
+            <div class="sort-container">
+                <label style="color: #ffd700;">Sort by:</label>
+                <select id="sortField" onchange="StudentManager.applySorting()" oninput="StudentManager.applySorting()">
+                    <option value="firstName">Name</option>
+                    <option value="email">Email</option>
+                    <option value="age">Age</option>
+                    <option value="id">ID</option>
+                    <option value="created_at">Registration Date</option>
+                </select>
+                <select id="sortOrder">
+                    <option value="ASC">Ascending</option>
+                    <option value="DESC">Descending</option>
+                </select>
+                <button onclick="StudentManager.applySorting()">Apply</button>
+            </div>
+        </div>
+    
+        <table id="studentsTable">
+            <thead>
+            <tr>
+                <th onclick="StudentManager.sortByColumn('id')">ID</th>
+                <th onclick="StudentManager.sortByColumn('firstName')">Name</th>
+                <th onclick="StudentManager.sortByColumn('email')">Email</th>
+                <th>Phone</th>
+                <th onclick="StudentManager.sortByColumn('age')">Age</th>
+                <th>Courses</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <button id="prevBtn" onclick="StudentManager.previousPage()" disabled>Previous</button>
+            <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
+            <button id="nextBtn" onclick="StudentManager.nextPage()" disabled>Next</button>
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal-overlay" id="studentDetailsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Student Details</div>
+            <button class="close-btn" onclick="ModalManager.closeStudentDetails()">&times;</button>
+        </div>
+        <div class="modal-body" id="studentDetailsBody">
+            <!-- Student details will be populated here -->
+        </div>
+    </div>
+</div>
+
+<!-- Edit Student Modal -->
+<div class="modal-overlay" id="editStudentModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Edit Student</div>
+            <button class="close-btn" onclick="ModalManager.closeEditStudent()">&times;</button>
+        </div>
+        <div class="modal-body" id="editStudentBody">
+            <!-- Edit form will be populated here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // =============================
+    // CONFIGURATION
+    // =============================
+    const CONFIG = {
+        API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'
+            : 'https://your-backend-app.onrender.com', // UPDATE THIS WITH YOUR ACTUAL RENDER URL
+        ENDPOINTS: {
+            ADMIN_LOGIN: '/api/admins/login',
+            STUDENTS: '/api/students',
+            STUDENT_DETAILS: '/api/students',
+            EXPORT_CSV: '/api/students/export/csv',
+            EXPORT_PDF: '/api/students/export/pdf'
+        }
+    };
+
+    // =============================
+    // STATE MANAGEMENT
+    // =============================
+    const AppState = {
+        currentState: {
+            page: 1,
+            limit: 10,
+            search: '',
+            sort: 'id',
+            order: 'ASC',
+            totalPages: 1,
+            totalStudents: 0
+        },
+        currentEditingStudent: null,
+        isSidePanelOpen: false
+    };
+
+    // =============================
+    // DOM ELEMENTS
+    // =============================
+    const DOM = {
+        threeLineBtn: document.getElementById('threeLineBtn'),
+        sidePanel: document.getElementById('sidePanel'),
+        sidePanelClose: document.getElementById('sidePanelClose'),
+        loginSection: document.getElementById('loginSection'),
+        dashboard: document.getElementById('dashboard'),
+        modals: {
+            studentDetails: document.getElementById('studentDetailsModal'),
+            editStudent: document.getElementById('editStudentModal')
+        }
+    };
+
+    // =============================
+    // NAVIGATION MANAGER
+    // =============================
+    const NavigationManager = {
+        init() {
+            DOM.threeLineBtn.addEventListener('click', this.toggleSidePanel.bind(this));
+            DOM.sidePanelClose.addEventListener('click', this.toggleSidePanel.bind(this));
+            document.addEventListener('click', this.closeSidePanelOnClickOutside.bind(this));
+        },
+
+        toggleSidePanel() {
+            AppState.isSidePanelOpen = !AppState.isSidePanelOpen;
+            DOM.threeLineBtn.classList.toggle('active');
+            DOM.sidePanel.classList.toggle('active');
+        },
+
+        closeSidePanelOnClickOutside(event) {
+            const isClickInsideSidePanel = DOM.sidePanel.contains(event.target);
+            const isClickOnMenuButton = DOM.threeLineBtn.contains(event.target);
+            
+            if (!isClickInsideSidePanel && !isClickOnMenuButton && AppState.isSidePanelOpen) {
+                this.toggleSidePanel();
+            }
+        }
+    };
+
+    // =============================
+    // MODAL MANAGER
+    // =============================
+    const ModalManager = {
+        showStudentDetails() {
+            DOM.modals.studentDetails.classList.add('show');
+        },
+
+        closeStudentDetails() {
+            DOM.modals.studentDetails.classList.remove('show');
+        },
+
+        showEditStudent() {
+            DOM.modals.editStudent.classList.add('show');
+        },
+
+        closeEditStudent() {
+            DOM.modals.editStudent.classList.remove('show');
+            AppState.currentEditingStudent = null;
+        },
+
+        initModalEvents() {
+            // Close modals on outside click
+            DOM.modals.studentDetails.addEventListener('click', (e) => {
+                if (e.target === DOM.modals.studentDetails) this.closeStudentDetails();
+            });
+            
+            DOM.modals.editStudent.addEventListener('click', (e) => {
+                if (e.target === DOM.modals.editStudent) this.closeEditStudent();
+            });
+
+            // Close modals with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.closeStudentDetails();
+                    this.closeEditStudent();
+                }
+            });
+        }
+    };
+
+    // =============================
+    // ADMIN AUTHENTICATION MANAGER
+    // =============================
+    const AdminManager = {
+        async login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const msg = document.getElementById('loginMessage');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!email || !password) {
+                this.showMessage(msg, "Please enter both email and password!", "error");
+                return;
+            }
+
+            this.setButtonState(loginBtn, true, "Logging in...");
+            this.showMessage(msg, "", "info");
+
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.ADMIN_LOGIN}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    this.showMessage(msg, "Login successful!", "success");
+                    localStorage.setItem("adminLoggedIn", "true");
+                    localStorage.setItem("adminToken", data.token || "dummy-token");
+                    localStorage.setItem("adminData", JSON.stringify(data.admin || {}));
+                    setTimeout(() => this.showDashboard(), 1000);
+                } else {
+                    this.showMessage(msg, data.error || data.message || "Invalid credentials!", "error");
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                this.showMessage(msg, `Login failed: ${error.message}`, "error");
+            } finally {
+                this.setButtonState(loginBtn, false, "Login");
+            }
+        },
+
+        logout() {
+            localStorage.removeItem("adminLoggedIn");
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            DOM.dashboard.classList.add('hidden');
+            DOM.loginSection.classList.remove('hidden');
+            this.showMessage(document.getElementById('loginMessage'), "You've been logged out.", "success");
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        },
+
+        showDashboard() {
+            DOM.loginSection.classList.add('hidden');
+            DOM.dashboard.classList.remove('hidden');
+            StudentManager.fetchStudents();
+        },
+
+        showMessage(element, message, type) {
+            if (!element) return;
+            
+            element.textContent = message;
+            element.style.color = type === 'error' ? '#ef4444' : 
+                                type === 'success' ? '#10b981' : '#6b7280';
+        },
+
+        setButtonState(button, loading, text) {
+            if (!button) return;
+            
+            button.disabled = loading;
+            button.textContent = text;
+        }
+    };
+
+    // =============================
+    // STUDENT MANAGEMENT
+    // =============================
+    const StudentManager = {
+        async fetchStudents() {
+            try {
+                const { page, limit, search, sort, order } = AppState.currentState;
+                let url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.STUDENTS}?page=${page}&limit=${limit}&sort=${sort}&order=${order}`;
+                
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
+                }
+                
+                console.log('Fetching students from:', url);
+                
+                const res = await fetch(url);
+                
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch students: ${res.status}`);
+                }
+                
+                const response = await res.json();
+                console.log('Students response:', response);
+                
+                if (response.students) {
+                    this.displayStudents(response.students);
+                    this.updatePagination(response);
+                } else {
+                    throw new Error('Invalid response format from server');
+                }
+                
+            } catch (error) {
+                console.error("Error fetching students:", error);
+                this.showTableError(`Error loading students: ${error.message}`);
+            }
+        },
+
+        displayStudents(students) {
+            const tbody = document.querySelector("#studentsTable tbody");
+            
+            if (!students || students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ffd700;">No students found matching your criteria</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = students.map(student => `
+                <tr>
+                    <td>${student.id}</td>
+                    <td>
+                        <div class="name-container">
+                            ${this.getProfilePictureHTML(student.profilePictureUrl)}
+                            <span class="clickable-name" onclick="StudentManager.viewStudentDetails(${student.id})">
+                                ${student.firstName} ${student.lastName}
+                            </span>
+                        </div>
+                    </td>
+                    <td>${student.email}</td>
+                    <td>${student.phone || 'N/A'}</td>
+                    <td>${student.age || 'N/A'}</td>
+                    <td class="courses-list">${this.formatCourses(student.courses)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" onclick="StudentManager.editStudent(${student.id})" title="Edit Student">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="action-btn view-btn" onclick="StudentManager.viewStudentDetails(${student.id})" title="View Details">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="action-btn delete-btn" onclick="StudentManager.deleteStudent(${student.id})" title="Delete Student">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        },
+
+        async viewStudentDetails(studentId) {
+            try {
+                console.log('Fetching student details for ID:', studentId);
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.STUDENT_DETAILS}/${studentId}`);
+                
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch student details: ${res.status}`);
+                }
+                
+                const student = await res.json();
+                this.displayStudentDetails(student);
+            } catch (error) {
+                console.error("Error fetching student details:", error);
+                alert("Failed to load student details: " + error.message);
+            }
+        },
+
+        displayStudentDetails(student) {
+            const modalBody = document.getElementById('studentDetailsBody');
+            const profilePictureUrl = this.getProfilePictureURL(student.profilePictureUrl);
+            
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    ${profilePictureUrl ? 
+                        `<img src="${profilePictureUrl}" alt="Profile" class="profile-picture-large" 
+                              onerror="this.style.display='none'; document.getElementById('noImageFallback').style.display='flex';">` 
+                        : ''
+                    }
+                    <div id="noImageFallback" class="no-image-large" style="${profilePictureUrl ? 'display: none;' : ''}">
+                        No Image
+                    </div>
+                </div>
+                
+                <div class="student-details-grid">
+                    <div class="detail-group">
+                        <span class="detail-label">Student ID</span>
+                        <div class="detail-value">${student.id}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Full Name</span>
+                        <div class="detail-value">${student.firstName} ${student.lastName}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Email</span>
+                        <div class="detail-value">${student.email}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Phone</span>
+                        <div class="detail-value">${student.phone || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Age</span>
+                        <div class="detail-value">${student.age || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Education</span>
+                        <div class="detail-value">${student.education || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Experience</span>
+                        <div class="detail-value">${student.experience || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Motivation</span>
+                        <div class="detail-value">${student.motivation || 'N/A'}</div>
+                    </div>
+                </div>
+                
+                ${student.courses && student.courses.length > 0 ? `
+                    <div class="progress-section">
+                        <div class="progress-title">Course Progress</div>
+                        ${this.generateProgressData(student.courses).map(course => `
+                            <div class="progress-item">
+                                <span class="progress-course">${course.name}</span>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: ${course.progress}%"></div>
+                                </div>
+                                <span class="progress-percent">${course.progress}%</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #4b5563;">
+                    <div class="detail-label">Registration Date</div>
+                    <div class="detail-value">${student.created_at ? new Date(student.created_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'N/A'}</div>
+                </div>
+            `;
+            
+            ModalManager.showStudentDetails();
+        },
+
+        async editStudent(studentId) {
+            try {
+                console.log('Fetching student for editing ID:', studentId);
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.STUDENT_DETAILS}/${studentId}`);
+                
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch student details: ${res.status}`);
+                }
+                
+                const student = await res.json();
+                this.displayEditForm(student);
+            } catch (error) {
+                console.error("Error fetching student for editing:", error);
+                alert("Failed to load student for editing: " + error.message);
+            }
+        },
+
+        displayEditForm(student) {
+            AppState.currentEditingStudent = student;
+            const modalBody = document.getElementById('editStudentBody');
+            const profilePictureUrl = this.getProfilePictureURL(student.profilePictureUrl);
+            
+            const isCourseSelected = (courseName) => {
+                if (!student.courses) return false;
+                
+                if (Array.isArray(student.courses)) {
+                    return student.courses.includes(courseName);
+                }
+                
+                if (typeof student.courses === 'string') {
+                    try {
+                        const parsed = JSON.parse(student.courses);
+                        if (Array.isArray(parsed)) {
+                            return parsed.includes(courseName);
+                        }
+                    } catch {
+                        return student.courses === courseName;
+                    }
+                }
+                
+                return false;
+            };
+            
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    ${profilePictureUrl ? 
+                        `<img src="${profilePictureUrl}" alt="Profile" class="profile-picture-large" 
+                              onerror="this.style.display='none'; document.getElementById('noImageFallback').style.display='flex';">` 
+                        : ''
+                    }
+                    <div id="noImageFallback" class="no-image-large" style="${profilePictureUrl ? 'display: none;' : ''}">
+                        No Image
+                    </div>
+                </div>
+                
+                <form id="editStudentForm" class="edit-form">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-input" name="firstName" value="${student.firstName || ''}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-input" name="lastName" value="${student.lastName || ''}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" name="email" value="${student.email || ''}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="text" class="form-input" name="phone" value="${student.phone || ''}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-input" name="age" value="${student.age || ''}" min="16" max="100">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Courses</label>
+                        <select class="form-select" name="courses" multiple style="height: 120px;">
+                            <option value="Web Development" ${isCourseSelected('Web Development') ? 'selected' : ''}>Web Development</option>
+                            <option value="Data Science" ${isCourseSelected('Data Science') ? 'selected' : ''}>Data Science</option>
+                            <option value="Mobile App Development" ${isCourseSelected('Mobile App Development') ? 'selected' : ''}>Mobile App Development</option>
+                            <option value="UI/UX Design" ${isCourseSelected('UI/UX Design') ? 'selected' : ''}>UI/UX Design</option>
+                            <option value="Digital Marketing" ${isCourseSelected('Digital Marketing') ? 'selected' : ''}>Digital Marketing</option>
+                            <option value="Cybersecurity" ${isCourseSelected('Cybersecurity') ? 'selected' : ''}>Cybersecurity</option>
+                        </select>
+                        <small style="color: #b8a3c7; font-size: 12px;">Hold Ctrl/Cmd to select multiple courses</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Education</label>
+                        <input type="text" class="form-input" name="education" value="${student.education || ''}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Experience</label>
+                        <input type="text" class="form-input" name="experience" value="${student.experience || ''}">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Motivation</label>
+                        <textarea class="form-input form-textarea" name="motivation">${student.motivation || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" onclick="ModalManager.closeEditStudent()">Cancel</button>
+                        <button type="submit" class="save-btn">Save Changes</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editStudentForm').addEventListener('submit', this.handleEditSubmit.bind(this));
+            ModalManager.showEditStudent();
+        },
+
+        async handleEditSubmit(event) {
+            event.preventDefault();
+            
+            if (!AppState.currentEditingStudent) return;
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            // Get selected courses
+            const selectedCourses = [];
+            const courseOptions = form.courses.options;
+            for (let i = 0; i < courseOptions.length; i++) {
+                if (courseOptions[i].selected) {
+                    selectedCourses.push(courseOptions[i].value);
+                }
+            }
+            
+            // Prepare update data
+            const updatedData = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                email: formData.get('email'),
+                phone: formData.get('phone') || null,
+                age: formData.get('age') ? parseInt(formData.get('age')) : null,
+                education: formData.get('education') || null,
+                experience: formData.get('experience') || null,
+                motivation: formData.get('motivation') || null,
+                courses: selectedCourses
+            };
+            
+            console.log('Updating student with data:', updatedData);
+            
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.STUDENT_DETAILS}/${AppState.currentEditingStudent.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                
+                const responseText = await res.text();
+                console.log('Raw response:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Failed to parse response as JSON:', e);
+                    throw new Error('Invalid response from server');
+                }
+                
+                if (!res.ok) {
+                    throw new Error(result.error || result.message || `HTTP ${res.status}: Failed to update student`);
+                }
+                
+                alert("Student updated successfully!");
+                ModalManager.closeEditStudent();
+                this.fetchStudents();
+            } catch (error) {
+                console.error("Error updating student:", error);
+                alert("Failed to update student: " + error.message);
+            }
+        },
+
+        async deleteStudent(id) {
+            if (!confirm("Are you sure you want to delete this student?")) return;
+            
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.STUDENT_DETAILS}/${id}`, { 
+                    method: "DELETE" 
+                });
+                
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.error || 'Failed to delete student');
+                }
+                
+                alert("Student deleted successfully");
+                AppState.currentState.page = 1;
+                this.fetchStudents();
+            } catch (error) {
+                console.error("Error deleting student:", error);
+                alert("Failed to delete student: " + error.message);
+            }
+        },
+
+        // Utility Functions
+        getProfilePictureURL(profilePictureUrl) {
+            if (!profilePictureUrl) return null;
+            
+            if (profilePictureUrl.startsWith('http')) {
+                return profilePictureUrl;
+            }
+            
+            if (profilePictureUrl.startsWith('/uploads/')) {
+                return `${CONFIG.API_BASE_URL}${profilePictureUrl}`;
+            }
+            
+            return `${CONFIG.API_BASE_URL}/uploads/${profilePictureUrl}`;
+        },
+
+        getProfilePictureHTML(profilePictureUrl) {
+            const fullUrl = this.getProfilePictureURL(profilePictureUrl);
+            
+            if (fullUrl) {
+                return `<img src="${fullUrl}" alt="Profile" class="profile-picture" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+            }
+            
+            return `<div class="no-image">No Image</div>`;
+        },
+
+        formatCourses(coursesData) {
+            if (!coursesData) return 'No courses selected';
+            
+            try {
+                let courses = [];
+                
+                if (Array.isArray(coursesData)) {
+                    courses = coursesData;
+                } else if (typeof coursesData === 'string') {
+                    try {
+                        const parsed = JSON.parse(coursesData);
+                        courses = Array.isArray(parsed) ? parsed : [parsed];
+                    } catch {
+                        if (coursesData.includes(',')) {
+                            courses = coursesData.split(',').map(c => c.trim());
+                        } else if (coursesData.trim() !== '') {
+                            courses = [coursesData];
+                        }
+                    }
+                }
+                
+                courses = courses.filter(course => course && course.trim() !== '');
+                
+                return courses.length > 0 ? 
+                    courses.map(course => `<span class="course-tag">${course}</span>`).join('') : 
+                    'No courses selected';
+                    
+            } catch (error) {
+                console.error('Error parsing courses:', error);
+                return 'Error loading courses';
+            }
+        },
+
+        generateProgressData(courses) {
+            const coursesArray = Array.isArray(courses) ? courses : 
+                               typeof courses === 'string' ? JSON.parse(courses) : [];
+            
+            return coursesArray.map(course => ({
+                name: course,
+                progress: Math.floor(Math.random() * 100) + 1
+            }));
+        },
+
+        showTableError(message) {
+            const tbody = document.querySelector("#studentsTable tbody");
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 20px;">${message}</td></tr>`;
+        },
+
+        // Search & Sorting
+        searchStudents() {
+            AppState.currentState.search = document.getElementById('searchInput').value.trim();
+            AppState.currentState.page = 1;
+            this.fetchStudents();
+        },
+
+        clearSearch() {
+            document.getElementById('searchInput').value = '';
+            AppState.currentState.search = '';
+            AppState.currentState.page = 1;
+            this.fetchStudents();
+        },
+
+        applySorting() {
+            AppState.currentState.sort = document.getElementById('sortField').value;
+            AppState.currentState.order = document.getElementById('sortOrder').value;
+            AppState.currentState.page = 1;
+            this.fetchStudents();
+        },
+
+        sortByColumn(column) {
+            if (AppState.currentState.sort === column) {
+                AppState.currentState.order = AppState.currentState.order === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                AppState.currentState.sort = column;
+                AppState.currentState.order = 'ASC';
+            }
+            
+            document.getElementById('sortField').value = AppState.currentState.sort;
+            document.getElementById('sortOrder').value = AppState.currentState.order;
+            AppState.currentState.page = 1;
+            this.fetchStudents();
+        },
+
+        // Pagination
+        updatePagination(response) {
+            AppState.currentState.totalPages = response.totalPages || 1;
+            AppState.currentState.totalStudents = response.total || 0;
+
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageInfo = document.getElementById('pageInfo');
+
+            prevBtn.disabled = AppState.currentState.page <= 1;
+            nextBtn.disabled = AppState.currentState.page >= AppState.currentState.totalPages;
+
+            pageInfo.textContent = `Page ${AppState.currentState.page} of ${AppState.currentState.totalPages} (${AppState.currentState.totalStudents} students)`;
+        },
+
+        nextPage() {
+            if (AppState.currentState.page < AppState.currentState.totalPages) {
+                AppState.currentState.page++;
+                this.fetchStudents();
+            }
+        },
+
+        previousPage() {
+            if (AppState.currentState.page > 1) {
+                AppState.currentState.page--;
+                this.fetchStudents();
+            }
+        }
+    };
+
+    // =============================
+    // EXPORT MANAGER
+    // =============================
+    const ExportManager = {
+        async exportToCSV() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.EXPORT_CSV}`);
+                
+                if (!res.ok) throw new Error('Failed to export CSV');
+                
+                const blob = await res.blob();
+                this.downloadFile(blob, 'bucodel-students.csv');
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Failed to export CSV: ' + error.message);
+            }
+        },
+
+        async exportToPDF() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.EXPORT_PDF}`);
+                    
+                if (!res.ok) throw new Error('Failed to export PDF');
+                
+                const blob = await res.blob();
+                this.downloadFile(blob, 'bucodel-students.pdf');
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                alert('Failed to export PDF: ' + error.message);
+            }
+        },
+
+        downloadFile(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    };
+
+    // =============================
+    // EVENT LISTENERS INITIALIZATION
+    // =============================
+    function initializeEventListeners() {
+        // Enter key support for login
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const searchInput = document.getElementById('searchInput');
+
+        if (emailInput && passwordInput) {
+            emailInput.addEventListener('keypress', (e) => e.key === 'Enter' && AdminManager.login());
+            passwordInput.addEventListener('keypress', (e) => e.key === 'Enter' && AdminManager.login());
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && StudentManager.searchStudents());
+        }
+    }
+
+    // =============================
+    // INITIALIZATION
+    // =============================
+    document.addEventListener('DOMContentLoaded', function() {
+        NavigationManager.init();
+        ModalManager.initModalEvents();
+        initializeEventListeners();
+        
+        // Check if user is already logged in
+        if (localStorage.getItem("adminLoggedIn") === "true") {
+            AdminManager.showDashboard();
+        }
+
+        console.log('BUCODel Admin Panel Initialized');
+        console.log('API Base URL:', CONFIG.API_BASE_URL);
+        console.log('Environment:', window.location.hostname === 'localhost' ? 'Development' : 'Production');
+    });
+</script>
+</body>
+</html>

@@ -10,14 +10,16 @@ import { Parser } from "@json2csv/plainjs";
 import PDFDocument from "pdfkit";
 
 const app = express();
-const PORT = 3000;
+
+// Render provides port through environment variable
+const PORT = process.env.PORT || 3000;
 
 // =============================
 // ENHANCED FILE UPLOAD CONFIGURATION
 // =============================
 
-// Define uploads directory
-const uploadsDir = './uploads';
+// Use Render's ephemeral storage for uploads
+const uploadsDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads' : './uploads';
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
     console.log('Uploads directory created:', uploadsDir);
@@ -74,7 +76,16 @@ const multiUpload = multer({
 // MIDDLEWARE SETUP
 // =============================
 
-app.use(cors()); 
+app.use(cors({
+    origin: [
+        'https://your-frontend-app.onrender.com', // Your frontend URL on Render
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500'
+    ],
+    credentials: true
+})); 
+
 app.use(json()); 
 
 // Serve uploaded files statically with cache control
@@ -83,18 +94,25 @@ app.use('/uploads', express.static(uploadsDir, {
     etag: true
 }));
 
-// Database connection
+// Database connection - Updated for Render
 const db = createConnection({
-    host: "localhost",
-    user: "root",   
-    password: "",  
-    database: "bucohub",
-    port: 3306
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",   
+    password: process.env.DB_PASSWORD || "",  
+    database: process.env.DB_NAME || "bucohub",
+    port: process.env.DB_PORT || 3306,
+    ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : false
 });
 
 db.connect(err => {
     if (err) {
         console.error("Database connection failed:", err.message);
+        console.error("Database config:", {
+            host: process.env.DB_HOST || "localhost",
+            user: process.env.DB_USER || "root",
+            database: process.env.DB_NAME || "bucohub",
+            port: process.env.DB_PORT || 3306
+        });
         process.exit(1);
     }
     console.log("Connected to MySQL database (bucohub)");
@@ -235,12 +253,22 @@ function parseCourses(coursesData) {
 app.get("/", (req, res) => {
     res.json({ 
         message: "BUCODel API is running",
+        environment: process.env.NODE_ENV || 'development',
         endpoints: {
             studentRegistration: "/api/register",
             adminLogin: "/api/admins/login",
             studentLogin: "/api/students/login",
             fileUploads: "/uploads/"
         }
+    });
+});
+
+// Health check endpoint for Render
+app.get("/health", (req, res) => {
+    res.status(200).json({ 
+        status: "OK", 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
@@ -792,7 +820,7 @@ app.get("/api/files/info", authenticateAdmin, (req, res) => {
     }
 });
 
-// ADD THIS TO YOUR server.js FILE - ADMIN REGISTRATION ENDPOINT
+// ADMIN REGISTRATION ENDPOINT
 app.post("/api/admins/register", async (req, res) => {
     const { first_name, last_name, email, password, role = 'admin' } = req.body;
 
@@ -960,8 +988,10 @@ app.use((error, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+// Listen on all network interfaces for Render
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📁 File uploads served from: /uploads/`);
-    console.log(`💾 Upload directory: ${path.resolve(uploadsDir)}`);
+    console.log(`💾 Upload directory: ${uploadsDir}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
