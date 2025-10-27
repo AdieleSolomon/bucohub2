@@ -28,3 +28,21 @@ A comprehensive student management system for BUCODel Technological Hub.
 ## Environment Variables
 
 Create a `.env` file with:
+
+
+# Add all the new structure
+git add .
+
+# Check what will be committed
+git status
+
+# Commit the reorganization
+git commit -m "Reorganize project structure for deployment"
+
+# If you have a remote repository already, push
+git push origin main
+
+# If you don't have a remote, add it
+git remote add origin https://github.com/yourusername/bucohub.git
+git branch -M main
+git push -u origin main
